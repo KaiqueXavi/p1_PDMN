@@ -1,4 +1,9 @@
 import React, { Component } from 'react'
+import { Button } from 'primereact/button'
+import { IconField } from 'primereact/iconfield'
+import { InputIcon } from 'primereact/inputicon'
+import { InputText } from 'primereact/inputtext'
+
 
 export default class Busca extends Component {
     state = {
