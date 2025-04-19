@@ -10,11 +10,7 @@ class App extends React.Component {
 
   state = {
     mensagemErro: null,
-    cep: null,
-    logradouro: null,
-    bairro: null,
-    localidade: null,
-    uf: null
+    localidades: []
   }
 
   onBuscaRealizada = async(termoDeBusca) => {
@@ -23,21 +19,29 @@ class App extends React.Component {
 
     if (cepPuro.length !== 8){
         this.setState({
-          mensagemErro: 'CEP inválido'
+          mensagemErro: 'CEP inválido, ele deve ter apenas 8 digitos'
         })
-        console.log("CEP inválido")
-        return;
+        return
     }
     try{
       const response = await api.get(`/${cepPuro}/json/`)
-      this.setState({
-        cep: termoDeBusca,
+      if (response.data.erro){
+        this.setState({
+          mensagemErro: 'CEP não encontrado ou não existe'
+        })
+        return;
+      }
+      const novoLocal = {
+        cep: cepPuro,
         logradouro: response.data.logradouro,
         bairro: response.data.bairro,
         localidade: response.data.localidade,
         uf: response.data.uf,
-        mensagemErro: null
-      })
+      }
+      this.setState(prevState =>({
+        mensagemErro: null,
+        localidades: [novoLocal, ...prevState.localidades]
+      }))
       console.log(response)
     }
     catch(error){
@@ -62,8 +66,19 @@ class App extends React.Component {
             onBuscaRealizada={this.onBuscaRealizada}/>
             <div className="container mt-2">
               <div className="row">
-                <LocalidadeLista/>
-                <LocalidadeLista cep="55592-970" logradouro="Rua dos Navegantes" bairro="Vila de Porto de galinhas" localidade="Ipojucas" uf="PE" />
+                {this.state.mensagemErro && (
+                  <LocalidadeLista mensagemErro={this.state.mensagemErro}/>
+                )}
+                {this.state.localidades.map((item, index) =>(
+                  <LocalidadeLista 
+                    key={index}
+                    cep = {item.cep} 
+                    logradouro={item.logradouro} 
+                    bairro={item.bairro} 
+                    localidade={item.localidade} 
+                    uf={item.uf}
+                  />
+                ))}
               </div>
             </div>
         </div>
