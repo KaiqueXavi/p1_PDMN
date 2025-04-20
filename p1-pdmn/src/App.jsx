@@ -2,6 +2,7 @@ import React from 'react'
 import Busca from './components/Busca'
 import api from './utils/viacep'
 import LocalidadeLista from './components/LocalidadeLista'
+import {Chart} from 'primereact/chart'
 
 
 class App extends React.Component {
@@ -10,7 +11,8 @@ class App extends React.Component {
 
   state = {
     mensagemErro: null,
-    localidades: []
+    localidades: [],
+    ufQuantidade: {}
   }
 
   onBuscaRealizada = async(termoDeBusca) => {
@@ -38,10 +40,17 @@ class App extends React.Component {
         localidade: response.data.localidade,
         uf: response.data.uf,
       }
-      this.setState(prevState =>({
-        mensagemErro: null,
-        localidades: [novoLocal, ...prevState.localidades]
-      }))
+      this.setState((prevState) =>{
+        const novaContagem = {...prevState.ufQuantidade}
+        const uf = novoLocal.uf
+        novaContagem[uf] = (novaContagem[uf] || 0) + 1
+
+        return {
+          mensagemErro: null,
+          localidades: [novoLocal, ...prevState.localidades],
+          ufQuantidade: novaContagem
+        }
+      })
       console.log(response)
     }
     catch(error){
@@ -51,12 +60,33 @@ class App extends React.Component {
       console.log('Erro' + error)
     }
   }
+  gerarDadosDoGrafico() {
+    const { ufQuantidade } = this.state
+    const labels = Object.keys(ufQuantidade)
+    const data = Object.values(ufQuantidade)
+
+    return {
+      labels,
+      datasets: [
+        {
+          data,
+          backgroundColor: [
+            '#42A5F5', '#66BB6A', '#FFA726', '#AB47BC',
+            '#FF6384', '#36A2EB', '#FFCE56', '#009688',
+            '#8D6E63', '#26C6DA', '#9CCC65', '#FF7043'
+          ],
+        }
+      ]
+    }
+  }
+
 
   //o método render é obrigatório para todos os componentes que herdam de React.Component
   //ele deve retornar o que será exibido na tela
 
 
   render() {
+    const dadosGrafico = this.gerarDadosDoGrafico()
     return (
       <div
         className='grid justify-content'>
@@ -81,6 +111,12 @@ class App extends React.Component {
                 ))}
               </div>
             </div>
+            {Object.keys(this.state.ufQuantidade).length > 0 && (
+            <div className="mt-4" style={{ maxWidth: '500px', margin: '0 auto' }}>
+              <h3 className="text-center">Distribuição por Estado (UF)</h3>
+              <Chart type="pie" data={dadosGrafico} />
+            </div>
+          )}
         </div>
       </div>
     )
