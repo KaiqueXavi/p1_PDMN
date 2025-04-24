@@ -26,7 +26,7 @@ export default class Grafico extends Component {
   render() {
     const { ufQuantidade } = this.props
 
-    if (!ufQuantidade || Object.keys(ufQuantidade).length === 0) {
+    if (!ufQuantidade || ufQuantidade.length === 0) {
       return null
     }
 
