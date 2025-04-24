@@ -41,7 +41,7 @@ class App extends React.Component {
         uf: response.data.uf,
       }
       this.setState((prevState) =>{
-        const novaContagem = [...prevState.ufQuantidade]
+        const novaContagem = prevState.ufQuantidade.map(item => ({ ...item }))
         const uf = novoLocal.uf
 
         // verifica se a UF já existe
