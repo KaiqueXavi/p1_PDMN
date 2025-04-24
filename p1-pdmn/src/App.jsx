@@ -2,7 +2,7 @@ import React from 'react'
 import Busca from './components/Busca'
 import api from './utils/viacep'
 import LocalidadeLista from './components/LocalidadeLista'
-import {Chart} from 'primereact/chart'
+import Grafico from './components/Grafico'
 
 
 class App extends React.Component {
@@ -12,7 +12,7 @@ class App extends React.Component {
   state = {
     mensagemErro: null,
     localidades: [],
-    ufQuantidade: {}
+    ufQuantidade: []
   }
 
   onBuscaRealizada = async(termoDeBusca) => {
@@ -41,9 +41,18 @@ class App extends React.Component {
         uf: response.data.uf,
       }
       this.setState((prevState) =>{
-        const novaContagem = {...prevState.ufQuantidade}
+        const novaContagem = [...prevState.ufQuantidade]
         const uf = novoLocal.uf
-        novaContagem[uf] = (novaContagem[uf] || 0) + 1
+
+        // verifica se a UF já existe
+        const index = novaContagem.findIndex(item => item.uf === uf)
+
+        if (index !== -1) {
+          novaContagem[index].quantidade += 1
+        } else {
+          novaContagem.push({ uf, quantidade: 1 })
+        }
+
 
         return {
           mensagemErro: null,
@@ -60,42 +69,19 @@ class App extends React.Component {
       console.log('Erro' + error)
     }
   }
-  gerarDadosDoGrafico() {
-    const { ufQuantidade } = this.state
-    const labels = Object.keys(ufQuantidade)
-    const data = Object.values(ufQuantidade)
-
-    return {
-      labels,
-      datasets: [
-        {
-          data,
-          backgroundColor: [
-            '#42A5F5', '#66BB6A', '#FFA726', '#AB47BC',
-            '#FF6384', '#36A2EB', '#FFCE56', '#009688',
-            '#8D6E63', '#26C6DA', '#9CCC65', '#FF7043'
-          ],
-        }
-      ]
-    }
-  }
-
-
   //o método render é obrigatório para todos os componentes que herdam de React.Component
   //ele deve retornar o que será exibido na tela
 
-
   render() {
-    const dadosGrafico = this.gerarDadosDoGrafico()
     return (
       <div
-        className='grid justify-content'>
+        className='grid justify-content-center'>
         <div className='col-12'>
           <Busca
             dica ='Digite o cep desejado'
             onBuscaRealizada={this.onBuscaRealizada}/>
-            <div className="container mt-2">
-              <div className="row">
+            <div className="grid mt-2">
+              <div className="col-12 md:col-6"> 
                 {this.state.mensagemErro && (
                   <LocalidadeLista mensagemErro={this.state.mensagemErro}/>
                 )}
@@ -110,13 +96,12 @@ class App extends React.Component {
                   />
                 ))}
               </div>
+              <div className="col-12 md:col-6">
+                {this.state.ufQuantidade.length > 0 && (
+                  <Grafico ufQuantidade={this.state.ufQuantidade} />
+                )}
+              </div>
             </div>
-            {Object.keys(this.state.ufQuantidade).length > 0 && (
-            <div className="mt-4" style={{ maxWidth: '500px', margin: '0 auto' }}>
-              <h3 className="text-center">Distribuição por Estado (UF)</h3>
-              <Chart type="pie" data={dadosGrafico} />
-            </div>
-          )}
         </div>
       </div>
     )
